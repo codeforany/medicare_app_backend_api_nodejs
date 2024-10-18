@@ -1,0 +1,11 @@
+{
+    "dbConfig": {
+        "host": "localhost",
+        "user": "root",
+        "password": "",
+        "database": "medicare",
+        "multipleStatements": true,
+        "timezone": "utc+5:30",
+        "charset": "utf8mb4"
+    }
+}
