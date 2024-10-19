@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Oct 18, 2024 at 06:26 AM
+-- Generation Time: Oct 19, 2024 at 07:23 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -264,6 +264,7 @@ CREATE TABLE `user_detail` (
   `last_name` varchar(100) NOT NULL DEFAULT '',
   `mobile_code` varchar(10) NOT NULL DEFAULT '',
   `mobile` varchar(20) NOT NULL DEFAULT '',
+  `image` varchar(150) NOT NULL DEFAULT '',
   `email` varchar(100) NOT NULL DEFAULT '',
   `year_experience` varchar(10) NOT NULL DEFAULT '1',
   `fees` varchar(20) NOT NULL DEFAULT '0.0',
