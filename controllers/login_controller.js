@@ -115,4 +115,39 @@ module.exports.controller = (app, io, socket_list) => {
         })
     }
 
+
+    app.post('/api/admin/login', (req, res) => {
+        helper.Dlog(req.body);
+        var reqObj  = req.body;
+
+        helper.CheckParameterValid(res, reqObj, ["email", "password", "os_type", "push_token", "socket_id" ], () =>{
+
+            var auth_token = helper.createRequestToken();
+            db.query('UPDATE `user_detail` SET `auth_token` = ?, `modify_date` = ? WHERE `email` = ? AND `password` =? AND `user_type` = ? ;' +
+                "SELECT `user_id` FROM `user_detail` WHERE `email` = ? AND `password` =? AND `user_type` = ?", [auth_token, reqObj.email, reqObj.password, 5, reqObj.email, reqObj.password, 5], (err, result) => {
+
+                    if(err) {
+                        helper.ThrowHtmlError(err, res);
+                        return
+                    }
+
+                    if(result[0].affectRows > 0) {
+                        getUserDetailUserId(result[1][0].user_id, (isGet, uObj) => {
+                            res.json({
+                                'status':'1',
+                                'payload': uObj,
+                                'message':'login successfully'
+                            })
+                        })
+                    }else{
+                        res.json({
+                            'status':'0',
+                            'message':'invalid email address & password'
+                        })
+                    }
+            })
+
+        })
+    } )
+
 }
