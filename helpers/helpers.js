@@ -113,6 +113,10 @@ module.exports = {
         return serverDateTime(format);
     },
 
+    serverMySQLDateTime: (date, format) => {
+        return serverChangeDateTime(date, format);
+    },
+
     serverYYYYMMDDHHmmss: () => {
         return serverYYYYMMDDHHmmss();
     },
@@ -133,11 +137,21 @@ module.exports = {
         return serverDateTime('YYYYMMDDHHmmssms') + result + '.' + extension;
     },
 
+    isoDate: (date) => {
+        return moment.tz(date, 'YYYY-MM-DD HH:mm:ss', timezone_name).toISOString();
+    },
+
 }
 
 
 function serverDateTime(format) {
     var jun = moment(new Date());
+    jun.tz(timezone_name).format();
+    return jun.format(format);
+}
+
+function serverChangeDateTime(date,format) {
+    var jun = moment(date);
     jun.tz(timezone_name).format();
     return jun.format(format);
 }
