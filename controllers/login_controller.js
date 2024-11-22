@@ -103,7 +103,8 @@ module.exports.controller = (app, io, socket_list) => {
     })
 
     function getUserDetailUserId(user_id, callback) {
-        db.query('SELECT `user_id`, `first_name`, `middel_name`, `last_name`, `mobile_code`, `mobile`, `image`, `email`, `os_type`,  `auth_token`,  `user_type`, `status` FROM `user_detail` WHERE `user_id` = ?', [user_id], (err, result) => {
+        db.query('SELECT `user_id`, `first_name`, `middel_name`, `last_name`, `mobile_code`, `mobile`, '+
+            ' (CASE WHEN `image` != "" THEN CONCAT ("' + helper.ImagePath() + '", `image`) ELSE "" END ) AS `image`, `email`, `os_type`,  `auth_token`,  `user_type`, `status` FROM `user_detail` WHERE `user_id` = ?', [user_id], (err, result) => {
 
             if (err) {
                 helper.ThrowHtmlError(err);
@@ -117,6 +118,100 @@ module.exports.controller = (app, io, socket_list) => {
             }
         })
     }
+
+
+    app.post('/api/app/user_profile_edit', (req, res) => {
+        helper.Dlog(req.body);
+        var reqObj = req.body;
+
+        checkAccessToken(req.headers, res, (uObj) => {
+            helper.CheckParameterValid(res, reqObj, ['first_name', 'middel_name', 'last_name', 'email', 'year_experience', 'fees' ], () => {
+
+                db.query('UPDATE `user_detail` SET `first_name`=? ,`middel_name`=?,`last_name`=?,`email`=?,`year_experience`=?,`fees`=?, `modify_date`=NOW() WHERE `status` != ? AND `user_id` = ? ', [
+                    reqObj.first_name, reqObj.middel_name, reqObj.last_name, reqObj.email, reqObj.year_experience, reqObj.fees, 2, uObj.user_id
+                ], (err, result) => {
+
+                    if(err) {
+                        helper.ThrowHtmlError(err, res);
+                        return
+                    }
+
+                    if(result.affectRows > 0) {
+
+                        getUserDetailUserId(uObj.user_id,  (isGet, uObj) => {
+                            res.json({
+                                'status': '1',
+                                'payload': uObj
+                            })
+                        })
+
+                    }else{
+                        res.json({
+                            'status':'0',
+                            'message':'User Profile Update Fail'
+                        })
+                    }
+
+                } )
+            } )
+        })
+
+    } )
+
+    app.post('/api/app/user_profile_image', (req, res) => {
+
+
+        checkAccessToken(req.headers, res, (uObj) => {
+            var form = new multiparty.Form();
+
+            form.parse(req, (err, reqObj, files) => {
+
+                if (err) {
+                    helper.ThrowHtmlError(err, res);
+                    return
+                }
+
+                helper.CheckParameterValid( res, files, ["image"], () => {
+
+                    var fileExtension = files.image[0].originalFilename.substring(files.image[0].originalFilename.lastIndexof('.') + 1);
+                    var fileName = "profile/" + helper.fileNameGenerate(fileExtension);
+                    var saveFilePath = imagePath + fileName;
+
+                    fs.rename(files.image[0].path, saveFilePath, (err) => {
+                        if(err) {
+                            helper.ThrowHtmlError(err, res);
+                            return
+                        }
+
+                        db.query('UPDATE `user_detail` SET `image` = ?, `modify_date` = NOW() WHERE `user_id` = ? ', [ fileName, uObj.user_id ], (err, result) => {
+
+                            if(err) {
+                                helper.ThrowHtmlError(err, res);
+                                return
+                            }
+
+                            if(result.affectRows > 0) {
+                                getUserDetailUserId(uObj.user_id, (isGet, uObj) => {
+                                    res.json({
+                                        'status': '1',
+                                        'payload': uObj
+                                    })
+                                })
+                            }else{
+                                res.json({
+                                    'status':'0',
+                                    'message':'user profile image upload file'
+                                })
+                            }
+
+                        } )
+                    } )
+
+                } )
+            })
+        } )
+    }  )
+
 
     app.post('/api/admin/login', (req, res) => {
         helper.Dlog(req.body);
@@ -271,7 +366,6 @@ module.exports.controller = (app, io, socket_list) => {
 
         }, '5')
     })
-
 
     app.post('/api/admin/add_issue', (req, res) => {
         var form = new multiparty.Form();
@@ -647,7 +741,9 @@ module.exports.controller = (app, io, socket_list) => {
             })
         }, '5')
 
-    } )
+    })
+
+
 
 }
 
