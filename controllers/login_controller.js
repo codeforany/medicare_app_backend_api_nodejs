@@ -212,6 +212,56 @@ module.exports.controller = (app, io, socket_list) => {
         } )
     }  )
 
+    app.post('/api/app/user_new_address_add', (req, res) => {
+
+        helper.Dlog(req.body);
+        var reqObj =  req.body;
+
+        checkAccessToken(req.headers, res, (uObj) => {
+
+            helper.CheckParameterValid(res, reqObj, ['address', 'latitude', 'longitude'], () => {
+
+                db.query('INSERT INTO `address_detail`( `user_id`, `address`, `latitude`, `longitude`) VALUES (?,?,?, ?)', [uObj.user_id, reqObj.address, reqObj.latitude, reqObj.longitude ], (err, result) => {
+
+
+                    if(err) {
+                        helper.ThrowHtmlError(err, res);
+                        return
+                    }
+
+                    if(result) {
+                        //success
+
+                        db.query('SELECT `address_id`, `user_id`, `address`, (CASE WHEN `image` != "" THEN CONCAT("' + helper.ImagePath() +  '" , `image` ) ELSE "" END) AS  `image`, `latitude`, `longitude`, `is_default`, `status`, `created_date`, `modify_date` FROM `address_detail` WHERE `user_id` = ? AND `status` != ? ', [ uObj.user_id, 2 ], (err, result) => {
+
+                            if (err) {
+                                helper.ThrowHtmlError(err, res);
+                                return
+                            }
+
+                            res.json({
+                                'status':'1',
+                                'message':'address added successfully',
+                                'payload': result
+                            })
+                        } )
+
+                    }else{
+                        //fail
+                        res.json({
+                            'status':'0',
+                            'message':'address add fail'
+                        })
+                    }
+
+                } )
+
+            } )
+
+        } )
+
+    }  )
+
 
     app.post('/api/admin/login', (req, res) => {
         helper.Dlog(req.body);
@@ -743,6 +793,74 @@ module.exports.controller = (app, io, socket_list) => {
 
     })
 
+    app.post('/api/admin/document_list_add', (req, res) => {
+        helper.Dlog(req.body);
+        var reqObj =  req.body;
+
+        checkAccessToken(req.headers, res, (uObj) => {
+
+            helper.CheckParameterValid(res, reqObj, ["doc_name", "is_both", "user_type", "is_active" ] , () =>{
+                db.query("INSERT INTO `doc_list_detail`( `doc_name`, `is_both`, `user_type`, `status`) VALUES (?,?,?, ?)",[
+                    reqObj.doc_name, reqObj.is_both, reqObj.user_type, reqObj.is_active
+                ], (err, result) => {
+
+                    if(err) {
+                        helper.ThrowHtmlError(err, res);
+                        return
+                    }
+
+                    if(result) {
+
+                        db.query('SELECT `doc_list_id`, `doc_name`, `is_both`, `user_type`, `status`, `created_date`, `modify_date` FROM `doc_list_detail` WHERE `status` != 2', [], (err, result) => {
+
+                            if (err) {
+                                helper.ThrowHtmlError(err, res);
+                                return
+                            }
+
+                            res.json({
+                                'status': '1',
+                                'payload': result,
+                                'message': 'document added successfully'
+                            })
+
+                        } )
+
+                        
+                    }else{
+                        res.json({
+                            'status':'0',
+                            'message': 'document add fail'
+                        })
+                    }
+
+                } )
+            })
+        },'5' )
+    })
+
+
+    app.post('/api/admin/document_list', (req, res) => {
+        helper.Dlog(req.body);
+        var reqObj = req.body;
+
+        checkAccessToken(req.headers, res, (uObj) => {
+
+            db.query('SELECT `doc_list_id`, `doc_name`, `is_both`, `user_type`, `status`, `created_date`, `modify_date` FROM `doc_list_detail` WHERE `status` != 2', [], (err, result) => {
+
+                if (err) {
+                    helper.ThrowHtmlError(err, res);
+                    return
+                }
+
+                res.json({
+                    'status': '1',
+                    'payload': result,
+                })
+
+            })            
+        }, '5')
+    })
 
 
 }

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Oct 19, 2024 at 07:23 AM
+-- Generation Time: Nov 25, 2024 at 12:00 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -36,6 +36,22 @@ CREATE TABLE `address_detail` (
   `longitude` varchar(30) NOT NULL DEFAULT '0.0',
   `is_default` int(1) NOT NULL DEFAULT 0 COMMENT ' 1= default',
   `status` int(11) NOT NULL DEFAULT 0 COMMENT '1 = active, 2 = Delete',
+  `created_date` datetime NOT NULL DEFAULT current_timestamp(),
+  `modify_date` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `ads_detail`
+--
+
+CREATE TABLE `ads_detail` (
+  `ad_id` int(11) NOT NULL,
+  `image` varchar(150) NOT NULL DEFAULT '',
+  `start_date` datetime NOT NULL DEFAULT current_timestamp(),
+  `end_date` datetime NOT NULL DEFAULT current_timestamp(),
+  `status` int(1) NOT NULL DEFAULT 1 COMMENT '1 = active, 2 = delete',
   `created_date` datetime NOT NULL DEFAULT current_timestamp(),
   `modify_date` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -133,6 +149,22 @@ CREATE TABLE `doctor_degree_detail` (
   `degree_name` varchar(100) NOT NULL DEFAULT '',
   `image` varchar(100) NOT NULL DEFAULT '',
   `status` int(11) NOT NULL DEFAULT 0 COMMENT '0 = new, 1 = verify, 2 = reject, 3 = delete',
+  `created_date` datetime NOT NULL DEFAULT current_timestamp(),
+  `modify_date` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `doc_list_detail`
+--
+
+CREATE TABLE `doc_list_detail` (
+  `doc_list_id` int(11) NOT NULL,
+  `doc_name` varchar(100) NOT NULL DEFAULT '',
+  `is_both` int(1) NOT NULL DEFAULT 2 COMMENT '1 = font side, 2 = back side',
+  `user_type` varchar(30) NOT NULL DEFAULT '2,3,4',
+  `status` int(1) NOT NULL DEFAULT 0 COMMENT ' 0 = inactive, 1 = active, 2 = delete',
   `created_date` datetime NOT NULL DEFAULT current_timestamp(),
   `modify_date` datetime NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -266,6 +298,7 @@ CREATE TABLE `user_detail` (
   `mobile` varchar(20) NOT NULL DEFAULT '',
   `image` varchar(150) NOT NULL DEFAULT '',
   `email` varchar(100) NOT NULL DEFAULT '',
+  `password` varchar(50) NOT NULL DEFAULT '',
   `year_experience` varchar(10) NOT NULL DEFAULT '1',
   `fees` varchar(20) NOT NULL DEFAULT '0.0',
   `latitude` varchar(30) NOT NULL DEFAULT '0.0',
@@ -306,6 +339,12 @@ ALTER TABLE `address_detail`
   ADD PRIMARY KEY (`address_id`);
 
 --
+-- Indexes for table `ads_detail`
+--
+ALTER TABLE `ads_detail`
+  ADD PRIMARY KEY (`ad_id`);
+
+--
 -- Indexes for table `booking_detail`
 --
 ALTER TABLE `booking_detail`
@@ -340,6 +379,12 @@ ALTER TABLE `city_detail`
 --
 ALTER TABLE `doctor_degree_detail`
   ADD PRIMARY KEY (`degree_id`);
+
+--
+-- Indexes for table `doc_list_detail`
+--
+ALTER TABLE `doc_list_detail`
+  ADD PRIMARY KEY (`doc_list_id`);
 
 --
 -- Indexes for table `experience_detail`
@@ -406,6 +451,12 @@ ALTER TABLE `address_detail`
   MODIFY `address_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `ads_detail`
+--
+ALTER TABLE `ads_detail`
+  MODIFY `ad_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `booking_detail`
 --
 ALTER TABLE `booking_detail`
@@ -440,6 +491,12 @@ ALTER TABLE `city_detail`
 --
 ALTER TABLE `doctor_degree_detail`
   MODIFY `degree_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `doc_list_detail`
+--
+ALTER TABLE `doc_list_detail`
+  MODIFY `doc_list_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT for table `experience_detail`
