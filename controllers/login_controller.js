@@ -103,20 +103,20 @@ module.exports.controller = (app, io, socket_list) => {
     })
 
     function getUserDetailUserId(user_id, callback) {
-        db.query('SELECT `user_id`, `first_name`, `middel_name`, `last_name`, `mobile_code`, `mobile`, '+
+        db.query('SELECT `user_id`, `first_name`, `middel_name`, `last_name`, `mobile_code`, `mobile`, ' +
             ' (CASE WHEN `image` != "" THEN CONCAT ("' + helper.ImagePath() + '", `image`) ELSE "" END ) AS `image`, `email`, `os_type`,  `auth_token`,  `user_type`, `status` FROM `user_detail` WHERE `user_id` = ?', [user_id], (err, result) => {
 
-            if (err) {
-                helper.ThrowHtmlError(err);
-                return;
-            }
+                if (err) {
+                    helper.ThrowHtmlError(err);
+                    return;
+                }
 
-            if (result.length > 0) {
-                return callback(true, result[0]);
-            } else {
-                return callback(false, {})
-            }
-        })
+                if (result.length > 0) {
+                    return callback(true, result[0]);
+                } else {
+                    return callback(false, {})
+                }
+            })
     }
 
 
@@ -125,38 +125,38 @@ module.exports.controller = (app, io, socket_list) => {
         var reqObj = req.body;
 
         checkAccessToken(req.headers, res, (uObj) => {
-            helper.CheckParameterValid(res, reqObj, ['first_name', 'middel_name', 'last_name', 'email', 'year_experience', 'fees' ], () => {
+            helper.CheckParameterValid(res, reqObj, ['first_name', 'middel_name', 'last_name', 'email', 'year_experience', 'fees'], () => {
 
                 db.query('UPDATE `user_detail` SET `first_name`=? ,`middel_name`=?,`last_name`=?,`email`=?,`year_experience`=?,`fees`=?, `modify_date`=NOW() WHERE `status` != ? AND `user_id` = ? ', [
                     reqObj.first_name, reqObj.middel_name, reqObj.last_name, reqObj.email, reqObj.year_experience, reqObj.fees, 2, uObj.user_id
                 ], (err, result) => {
 
-                    if(err) {
+                    if (err) {
                         helper.ThrowHtmlError(err, res);
                         return
                     }
 
-                    if(result.affectRows > 0) {
+                    if (result.affectRows > 0) {
 
-                        getUserDetailUserId(uObj.user_id,  (isGet, uObj) => {
+                        getUserDetailUserId(uObj.user_id, (isGet, uObj) => {
                             res.json({
                                 'status': '1',
                                 'payload': uObj
                             })
                         })
 
-                    }else{
+                    } else {
                         res.json({
-                            'status':'0',
-                            'message':'User Profile Update Fail'
+                            'status': '0',
+                            'message': 'User Profile Update Fail'
                         })
                     }
 
-                } )
-            } )
+                })
+            })
         })
 
-    } )
+    })
 
     app.post('/api/app/user_profile_image', (req, res) => {
 
@@ -171,68 +171,68 @@ module.exports.controller = (app, io, socket_list) => {
                     return
                 }
 
-                helper.CheckParameterValid( res, files, ["image"], () => {
+                helper.CheckParameterValid(res, files, ["image"], () => {
 
                     var fileExtension = files.image[0].originalFilename.substring(files.image[0].originalFilename.lastIndexof('.') + 1);
                     var fileName = "profile/" + helper.fileNameGenerate(fileExtension);
                     var saveFilePath = imagePath + fileName;
 
                     fs.rename(files.image[0].path, saveFilePath, (err) => {
-                        if(err) {
+                        if (err) {
                             helper.ThrowHtmlError(err, res);
                             return
                         }
 
-                        db.query('UPDATE `user_detail` SET `image` = ?, `modify_date` = NOW() WHERE `user_id` = ? ', [ fileName, uObj.user_id ], (err, result) => {
+                        db.query('UPDATE `user_detail` SET `image` = ?, `modify_date` = NOW() WHERE `user_id` = ? ', [fileName, uObj.user_id], (err, result) => {
 
-                            if(err) {
+                            if (err) {
                                 helper.ThrowHtmlError(err, res);
                                 return
                             }
 
-                            if(result.affectRows > 0) {
+                            if (result.affectRows > 0) {
                                 getUserDetailUserId(uObj.user_id, (isGet, uObj) => {
                                     res.json({
                                         'status': '1',
                                         'payload': uObj
                                     })
                                 })
-                            }else{
+                            } else {
                                 res.json({
-                                    'status':'0',
-                                    'message':'user profile image upload file'
+                                    'status': '0',
+                                    'message': 'user profile image upload file'
                                 })
                             }
 
-                        } )
-                    } )
+                        })
+                    })
 
-                } )
+                })
             })
-        } )
-    }  )
+        })
+    })
 
     app.post('/api/app/user_new_address_add', (req, res) => {
 
         helper.Dlog(req.body);
-        var reqObj =  req.body;
+        var reqObj = req.body;
 
         checkAccessToken(req.headers, res, (uObj) => {
 
             helper.CheckParameterValid(res, reqObj, ['address', 'latitude', 'longitude'], () => {
 
-                db.query('INSERT INTO `address_detail`( `user_id`, `address`, `latitude`, `longitude`) VALUES (?,?,?, ?)', [uObj.user_id, reqObj.address, reqObj.latitude, reqObj.longitude ], (err, result) => {
+                db.query('INSERT INTO `address_detail`( `user_id`, `address`, `latitude`, `longitude`) VALUES (?,?,?, ?)', [uObj.user_id, reqObj.address, reqObj.latitude, reqObj.longitude], (err, result) => {
 
 
-                    if(err) {
+                    if (err) {
                         helper.ThrowHtmlError(err, res);
                         return
                     }
 
-                    if(result) {
+                    if (result) {
                         //success
 
-                        db.query('SELECT `address_id`, `user_id`, `address`, (CASE WHEN `image` != "" THEN CONCAT("' + helper.ImagePath() +  '" , `image` ) ELSE "" END) AS  `image`, `latitude`, `longitude`, `is_default`, `status`, `created_date`, `modify_date` FROM `address_detail` WHERE `user_id` = ? AND `status` != ? ', [ uObj.user_id, 2 ], (err, result) => {
+                        db.query('SELECT `address_id`, `user_id`, `address`, (CASE WHEN `image` != "" THEN CONCAT("' + helper.ImagePath() + '" , `image` ) ELSE "" END) AS  `image`, `latitude`, `longitude`, `is_default`, `status`, `created_date`, `modify_date` FROM `address_detail` WHERE `user_id` = ? AND `status` != ? ', [uObj.user_id, 2], (err, result) => {
 
                             if (err) {
                                 helper.ThrowHtmlError(err, res);
@@ -240,23 +240,62 @@ module.exports.controller = (app, io, socket_list) => {
                             }
 
                             res.json({
-                                'status':'1',
-                                'message':'address added successfully',
+                                'status': '1',
+                                'message': 'address added successfully',
                                 'payload': result
                             })
-                        } )
+                        })
 
-                    }else{
+                    } else {
                         //fail
                         res.json({
-                            'status':'0',
-                            'message':'address add fail'
+                            'status': '0',
+                            'message': 'address add fail'
+                        })
+                    }
+
+                })
+
+            })
+
+        })
+
+    })
+
+    app.post('/api/app/register_type_document_list', (req, res) => {
+
+        helper.Dlog(req.body);
+        var reqObj =  req.body;
+
+        checkAccessToken(req.body, res, (uObj) => {
+
+            helper.CheckParameterValid(res, reqObj, ["user_type"] , () => {
+
+                db.query("SELECT `doc_list_id`, `doc_name`, `is_both`, `status` FROM `doc_list_detail` WHERE FIND_IN_SET ( ?, `user_type` ) != 0 AND  `status` = ?", [reqObj.user_type, 1], (err, result) => {
+
+                    if(err) {
+                        helper.ThrowHtmlError(err, res);
+                        return
+                    }
+
+                    if(result.length > 0) {
+                        res.json({
+                            'status':'1',
+                            'payload': result,
+                            'message':'document upload needed'
+                        })
+
+                    }else{
+                        res.json({
+                            'status':'1',
+                            'payload': [],
+                            'message':"no need document upload"
                         })
                     }
 
                 } )
 
-            } )
+            }  )
 
         } )
 
@@ -765,29 +804,29 @@ module.exports.controller = (app, io, socket_list) => {
         var reqObj = req.body;
 
         checkAccessToken(req.headers, res, (uObj) => {
-            helper.CheckParameterValid(res, reqObj, ['ad_id'], ()=> {
+            helper.CheckParameterValid(res, reqObj, ['ad_id'], () => {
                 db.query('UPDATE `ads_detail` SET `status` = ?, `modify_date` = NOW() WHERE `ad_id` = ? AND `status` != ? ', [
                     '2', '2'
-                ] , (err, result) => {
+                ], (err, result) => {
 
-                    if(err) {
-                        helper.ThrowHtmlError(err,res);
+                    if (err) {
+                        helper.ThrowHtmlError(err, res);
                         return
                     }
 
                     if (result.affectRows > 0) {
                         res.json({
-                            'status':'1',
-                            'message':'ads deleted successfully'
+                            'status': '1',
+                            'message': 'ads deleted successfully'
                         })
-                    }else{
+                    } else {
                         res.json({
                             'status': '0',
                             'message': 'ads delete fail'
                         })
                     }
 
-                } )
+                })
             })
         }, '5')
 
@@ -795,21 +834,21 @@ module.exports.controller = (app, io, socket_list) => {
 
     app.post('/api/admin/document_list_add', (req, res) => {
         helper.Dlog(req.body);
-        var reqObj =  req.body;
+        var reqObj = req.body;
 
         checkAccessToken(req.headers, res, (uObj) => {
 
-            helper.CheckParameterValid(res, reqObj, ["doc_name", "is_both", "user_type", "is_active" ] , () =>{
-                db.query("INSERT INTO `doc_list_detail`( `doc_name`, `is_both`, `user_type`, `status`) VALUES (?,?,?, ?)",[
+            helper.CheckParameterValid(res, reqObj, ["doc_name", "is_both", "user_type", "is_active"], () => {
+                db.query("INSERT INTO `doc_list_detail`( `doc_name`, `is_both`, `user_type`, `status`) VALUES (?,?,?, ?)", [
                     reqObj.doc_name, reqObj.is_both, reqObj.user_type, reqObj.is_active
                 ], (err, result) => {
 
-                    if(err) {
+                    if (err) {
                         helper.ThrowHtmlError(err, res);
                         return
                     }
 
-                    if(result) {
+                    if (result) {
 
                         db.query('SELECT `doc_list_id`, `doc_name`, `is_both`, `user_type`, `status`, `created_date`, `modify_date` FROM `doc_list_detail` WHERE `status` != 2', [], (err, result) => {
 
@@ -824,19 +863,19 @@ module.exports.controller = (app, io, socket_list) => {
                                 'message': 'document added successfully'
                             })
 
-                        } )
+                        })
 
-                        
-                    }else{
+
+                    } else {
                         res.json({
-                            'status':'0',
+                            'status': '0',
                             'message': 'document add fail'
                         })
                     }
 
-                } )
+                })
             })
-        },'5' )
+        }, '5')
     })
 
 
@@ -858,9 +897,74 @@ module.exports.controller = (app, io, socket_list) => {
                     'payload': result,
                 })
 
-            })            
+            })
         }, '5')
     })
+
+    app.post('/api/admin/document_list_edit', (req, res) => {
+        helper.Dlog(req.body);
+        var reqObj = req.body;
+
+        checkAccessToken(req.headers, res, (uObj) => {
+            helper.CheckParameterValid(res, reqObj, ['doc_list_id', 'doc_name', 'is_both', 'user_type', 'is_active'], () => {
+
+                db.query('UPDATE `doc_list_detail` SET `doc_name`=?,`is_both`=?,`user_type`=?,`status`=?,`modify_date`= NOW() WHERE `doc_list_id`=? AND `status` != ?', [
+
+                    reqObj.doc_name, reqObj.is_both, reqObj.user_type, reqObj.is_active, reqObj.doc_list_id, 2
+
+                ], (err, result) => {
+
+                    if (err) {
+                        helper.ThrowHtmlError(err, res);
+                        return
+                    }
+
+                    if (result.affectRows > 0) {
+                        res.json({
+                            'status': '1',
+                            'message': 'document updated successfully'
+                        })
+                    } else {
+                        res.json({
+                            'status': '0',
+                            'message': 'document update fail'
+                        })
+                    }
+
+                })
+
+            })
+
+        }, '5')
+    })
+
+    app.post('/api/admin/document_list_delete', (req, res) => {
+        helper.Dlog(req.body);
+        var reqObj = req.body;
+
+        checkAccessToken(req.headers, res, (uObj) => {
+            db.query('UPDATE `doc_list_detail` SET `status`=?,`modify_date`= NOW() WHERE `doc_list_id`=?', [2, reqObj.doc_list_id], (err, result) => {
+                if (err) {
+                    helper.ThrowHtmlError(err, res);
+                    return
+                }
+
+                if (result.affectRows > 0) {
+                    res.json({
+                        'status': '1',
+                        'message': 'document deleted successfully'
+                    })
+                } else {
+                    res.json({
+                        'status': '0',
+                        'message': 'document deleted fail'
+                    })
+                }
+            })
+        }, '5')
+    })
+
+    
 
 
 }
