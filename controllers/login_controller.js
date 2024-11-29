@@ -6,6 +6,8 @@ var fs = require('fs');
 
 var imagePath = "./public/img/"
 
+var ut_doctor = '2'
+
 module.exports.controller = (app, io, socket_list) => {
 
     const msg_success = "Success"
@@ -299,7 +301,96 @@ module.exports.controller = (app, io, socket_list) => {
 
         } )
 
-    }  )
+    })
+
+    app.post('/api/app/register_for_doctor_step_1', (req, res) => {
+
+        var  form  = new multiparty.Form()
+        
+        form.parse(req,  (err, reqObj, files) => {
+
+            if(err) {
+                helper.ThrowHtmlError(err,res);
+                return;
+            }
+
+            checkAccessToken(req.headers, res, (uObj) => {
+                helper.CheckParameterValid(res, reqObj, ['specialty', 'year_experience', 'fees', 'service_facility_list', 'experience_list' ], () => {
+
+                    helper.CheckParameterValid(res, files, ['image'], () => {
+
+                        var fileExtension = files.image[0].originalFilename.substring(files.image[0].originalFilename.lastIndexof(".") + 1);
+
+                        var fileName = "profile/" + helper.fileNameGenerate(fileExtension);
+                        var saveFilePath = imagePath + fileName;
+
+                        fs.rename(files.image[0].path, saveFilePath, (err) => {
+                            if (err) {
+                                helper.ThrowHtmlError(err, res);
+                                return
+                            }
+
+                            db.query('UPDATE `user_detail` SET `image`=?,`year_experience`=?,`fees`=?,`specialty`=?,`user_type`=?,`modify_date`= NOW() WHERE `user_id` = ? ', [fileName, reqObj.year_experience[0], reqObj.fees[0], reqObj.specialty[0], ut_doctor, uObj.user_id], (err, result) => {
+
+                                if (err) {
+                                    helper.ThrowHtmlError(err, res);
+                                    return
+                                }
+
+                                if(result.affectRows > 0) {
+
+                                    var serviceObj = JSON.parse(reqObj.service_facility_list[0] );
+                                    var experienceObj = JSON.parse(reqObj.experience_list[0]);
+
+                                    var experienceArr = []
+                                    var serviceArr = []
+                                    serviceObj.forEach((eObj, index) => {
+
+                                        serviceArr.push([uObj.user_id, eObj.name]);
+                                    });
+                                    experienceObj.forEach( (eObj, index)  => {
+
+                                        experienceArr.push( [ uObj.user_id, eObj.name ] );
+                                    });
+                                    db.query('INSERT INTO `experience_detail`( `user_id`, `info`) VALUES ? ;' +
+                                        'INSERT INTO `service_detail`( `user_id`, `service_name`) VALUES ?', [experienceArr, serviceArr] , (err, result) => {
+                                        if (err) {
+                                            helper.ThrowHtmlError(err, res);
+                                            return
+                                        }
+
+                                        helper.Dlog(result);
+
+                                        if(result.length > 0) {
+                                            res.json({
+                                                'status': '1',
+                                                'message': 'doctor register successfully'
+                                            })
+                                        }else{
+                                            res.json({
+                                                'status': "0",
+                                                'message': 'doctor register fail'
+                                            })
+                                        }
+                                    })
+                                }else{
+                                    res.json({
+                                        'status':"0",
+                                        'message':'doctor register fail'
+                                    })
+                                }
+                            } )
+
+                        })
+
+                    } )
+
+                } )
+            } )
+
+        } )
+
+    } )
 
 
     app.post('/api/admin/login', (req, res) => {
